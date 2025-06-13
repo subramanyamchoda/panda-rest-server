@@ -5,7 +5,7 @@ const multer = require("multer");
 const path = require('path');
 const nodemailer = require('nodemailer');
 const storage = multer.memoryStorage();
-
+const jwt = require('jsonwebtoken');
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, 
@@ -27,6 +27,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+
 const sendRestaurant = async (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
@@ -34,17 +35,34 @@ const sendRestaurant = async (req, res) => {
     }
 
     try {
+      // ✅ 1. Verify JWT from Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Unauthorized - No token provided" });
+      }
+
+      const token = authHeader.split(" ")[1];
+
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET); // uses JWT_SECRET=subbu
+      } catch (err) {
+        return res.status(401).json({ message: "Unauthorized - Invalid token" });
+      }
+
+      // ✅ 2. Extract restaurant data
       const { name, address } = req.body;
 
       if (!name || !address) {
         return res.status(400).json({ error: "All required fields must be filled" });
       }
 
-      const sender = await Sender.findById(req.senderId);
+      const sender = await Sender.findById(decoded.id);
       if (!sender) {
         return res.status(404).json({ error: "Sender not found" });
       }
 
+      // ✅ 3. Handle image upload
       const imageBuffers = (req.files || []).map(file => ({
         data: file.buffer,
         contentType: file.mimetype,
@@ -63,6 +81,7 @@ const sendRestaurant = async (req, res) => {
       sender.restaurants.push(newRestaurant._id);
       await sender.save();
 
+      // ✅ 4. Send confirmation email
       await transporter.sendMail({
         from: `"Panda Connect" <${process.env.EMAIL_USER}>`,
         to: sender.email,
@@ -87,6 +106,8 @@ const sendRestaurant = async (req, res) => {
     }
   });
 };
+
+
 
 //  the all restaurants and their images for 
 const allRestaurants = async (req, res) => {
