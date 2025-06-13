@@ -41,7 +41,6 @@ const sendRestaurant = async (req, res) => {
       }
 
       const sender = await Sender.findById(req.senderId);
-
       if (!sender) {
         return res.status(404).json({ error: "Sender not found" });
       }
@@ -64,7 +63,6 @@ const sendRestaurant = async (req, res) => {
       sender.restaurants.push(newRestaurant._id);
       await sender.save();
 
-      // ✅ Send email after successful creation
       await transporter.sendMail({
         from: `"Panda Connect" <${process.env.EMAIL_USER}>`,
         to: sender.email,
@@ -82,6 +80,7 @@ const sendRestaurant = async (req, res) => {
         message: "Restaurant added successfully",
         restaurant: newRestaurant
       });
+
     } catch (error) {
       console.error("Error adding restaurant:", error);
       return res.status(500).json({ error: "Internal Server Error" });
