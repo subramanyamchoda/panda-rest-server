@@ -22,17 +22,18 @@ const authenticateSender = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (!decoded || !decoded.senderId) {
+    if (!decoded?.senderId) {
       return res.status(401).json({ error: "Unauthorized - Invalid token payload" });
     }
 
-    req.senderId = decoded.senderId; // ✅ Attach senderId to request object
+    req.senderId = decoded.senderId;
     next();
   } catch (error) {
     console.error("JWT verification failed:", error);
     return res.status(401).json({ error: "Unauthorized - Invalid or expired token" });
   }
 };
+
 
 
 module.exports = {authenticateUser,authenticateSender} ;
