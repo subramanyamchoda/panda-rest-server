@@ -54,10 +54,10 @@ const googleLogin = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-   res.cookie("authToken", jwtToken, {
+ res.cookie("authToken", jwtToken, {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // 🔒 Secure only in production
-  sameSite: "Lax",
+  secure: process.env.NODE_ENV === "production", // true in production
+  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // None for cross-site
   maxAge: 24 * 60 * 60 * 1000
 });
 
