@@ -19,10 +19,16 @@ const bookingRouter = require('./routers/bookingRouter');
 app.use(express.json());
 
 
+const allowedOrigins = [
+  "https://pandarestaurantsadder.vercel.app",
+  "https://pandarestaurantsuser.vercel.app"
+];
+
 app.use(cors({
-  origin: "https://pandarestaurantsadder.vercel.app/" || "https://pandarestaurantsuser.vercel.app/",
-  credentials: true               
+  origin: allowedOrigins,
+  credentials: true
 }));
+
 
 app.use(cookieParser());
 
