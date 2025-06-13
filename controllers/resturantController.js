@@ -36,19 +36,11 @@ const sendRestaurant = async (req, res) => {
 
     try {
       // ✅ 1. Verify JWT from Authorization header
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Unauthorized - No token provided" });
-      }
+      const token = req.headers.authorization;
+if (!token || token !== `Bearer ${process.env.JWT_SECRET}`) {
+  return res.status(401).json({ message: 'Unauthorized' });
+}
 
-      const token = authHeader.split(" ")[1];
-
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET); // uses JWT_SECRET=subbu
-      } catch (err) {
-        return res.status(401).json({ message: "Unauthorized - Invalid token" });
-      }
 
       // ✅ 2. Extract restaurant data
       const { name, address } = req.body;
