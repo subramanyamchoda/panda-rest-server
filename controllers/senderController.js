@@ -47,28 +47,31 @@ const googleLogin = async (req, res) => {
       await sender.save();
     }
 
+    // ✅ Use the same secret used in `authenticateSender`
     const jwtToken = jwt.sign(
       { senderId: sender._id },
-      secretKey,
+      process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
     res.cookie("authToken", jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Lax"
+      sameSite: "Lax",
+      maxAge: 24 * 60 * 60 * 1000
     });
 
-    // ✅ Send login email
     await transporter.sendMail({
       from: '"Panda Connect" <pandaconnect7@gmail.com>',
       to: sender.email,
       subject: "Login Successful",
-      html: `<p>Hi ${sender.name},</p>
-             <p>You have successfully logged in to Panda Connect.</p>
-             <p>If this wasn't you, please contact our support team immediately.</p>
-             <br>
-             <p>Best regards,<br>Panda Connect Team</p>`
+      html: `
+        <p>Hi ${sender.name},</p>
+        <p>You have successfully logged in to Panda Connect.</p>
+        <p>If this wasn't you, please contact our support team immediately.</p>
+        <br>
+        <p>Best regards,<br>Panda Connect Team</p>
+      `
     });
 
     res.json({
@@ -86,7 +89,6 @@ const googleLogin = async (req, res) => {
     res.status(401).json({ error: "Login failed" });
   }
 };
-
 
 // Logout
 const logout = (req, res) => {
