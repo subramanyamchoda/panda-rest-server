@@ -13,26 +13,23 @@ const authenticateUser = (req, res, next) => {
   }
 };
 const authenticateSender = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    const token = req.cookies?.authToken;
-
-    if (!token) {
-      return res.status(401).json({ error: "Unauthorized - No token provided" });
-    }
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decoded?.senderId) {
-      return res.status(401).json({ error: "Unauthorized - Invalid token payload" });
-    }
-
-    req.senderId = decoded.senderId;
+    req.senderId = decoded.senderId; // note: match the key used in sign()
     next();
-  } catch (error) {
-    console.error("JWT verification failed:", error);
-    return res.status(401).json({ error: "Unauthorized - Invalid or expired token" });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
   }
 };
+
 
 
 module.exports = {authenticateUser,authenticateSender} ;
